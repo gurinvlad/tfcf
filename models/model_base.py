@@ -28,7 +28,7 @@ class BaseModel(object):
         """
 
         if not self._built:
-            raise RunTimeError('The model must be trained '
+            raise RuntimeError('The model must be trained '
                                'before saving.')
 
         self._saver = tf.train.Saver()

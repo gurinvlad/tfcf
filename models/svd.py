@@ -23,19 +23,19 @@ class SVD(BaseModel):
     def _create_placeholders(self):
         """Returns the placeholders.
         """
-        with tf.compat.v1.variable_scope('placeholder'):
-            users = tf.compat.v1.placeholder(tf.compat.v1.int32, shape=[None, ], name='users')
-            items = tf.compat.v1.placeholder(tf.compat.v1.int32, shape=[None, ], name='items')
-            ratings = tf.compat.v1.placeholder(
-                tf.compat.v1.float32, shape=[None, ], name='ratings')
+        with tf.variable_scope('placeholder'):
+            users = tf.placeholder(tf.int32, shape=[None, ], name='users')
+            items = tf.placeholder(tf.int32, shape=[None, ], name='items')
+            ratings = tf.placeholder(
+                tf.float32, shape=[None, ], name='ratings')
 
         return users, items, ratings
 
     def _create_constants(self, mu):
         """Returns the constants.
         """
-        with tf.compat.v1.variable_scope('constant'):
-            _mu = tf.compat.v1.constant(mu, shape=[], dtype=tf.compat.v1.float32)
+        with tf.variable_scope('constant'):
+            _mu = tf.constant(mu, shape=[], dtype=tf.float32)
 
         return _mu
 
@@ -45,18 +45,18 @@ class SVD(BaseModel):
         num_users = self.num_users
         num_factors = self.num_factors
 
-        with tf.compat.v1.variable_scope('user'):
-            user_embeddings = tf.compat.v1.get_variable(
+        with tf.variable_scope('user'):
+            user_embeddings = tf.get_variable(
                 name='embedding',
                 shape=[num_users, num_factors],
-                initializer=tf.compat.v1.contrib.layers.xavier_initializer(),
-                regularizer=tf.compat.v1.contrib.layers.l2_regularizer(self.reg_p_u))
+                initializer=tf.contrib.layers.xavier_initializer(),
+                regularizer=tf.contrib.layers.l2_regularizer(self.reg_p_u))
 
-            user_bias = tf.compat.v1.get_variable(
+            user_bias = tf.get_variable(
                 name='bias',
                 shape=[num_users, ],
-                initializer=tf.compat.v1.contrib.layers.xavier_initializer(),
-                regularizer=tf.compat.v1.contrib.layers.l2_regularizer(self.reg_b_u))
+                initializer=tf.contrib.layers.xavier_initializer(),
+                regularizer=tf.contrib.layers.l2_regularizer(self.reg_b_u))
 
             p_u = tf.nn.embedding_lookup(
                 user_embeddings,
@@ -76,18 +76,18 @@ class SVD(BaseModel):
         num_items = self.num_items
         num_factors = self.num_factors
 
-        with tf.compat.v1.variable_scope('item'):
-            item_embeddings = tf.compat.v1.get_variable(
+        with tf.variable_scope('item'):
+            item_embeddings = tf.get_variable(
                 name='embedding',
                 shape=[num_items, num_factors],
-                initializer=tf.compat.v1.contrib.layers.xavier_initializer(),
-                regularizer=tf.compat.v1.contrib.layers.l2_regularizer(self.reg_q_i))
+                initializer=tf.contrib.layers.xavier_initializer(),
+                regularizer=tf.contrib.layers.l2_regularizer(self.reg_q_i))
 
-            item_bias = tf.compat.v1.get_variable(
+            item_bias = tf.get_variable(
                 name='bias',
                 shape=[num_items, ],
-                initializer=tf.compat.v1.contrib.layers.xavier_initializer(),
-                regularizer=tf.compat.v1.contrib.layers.l2_regularizer(self.reg_b_i))
+                initializer=tf.contrib.layers.xavier_initializer(),
+                regularizer=tf.contrib.layers.l2_regularizer(self.reg_b_i))
 
             q_i = tf.nn.embedding_lookup(
                 item_embeddings,
@@ -107,14 +107,14 @@ class SVD(BaseModel):
            Note that the prediction 
             r_hat = \mu + b_u + b_i + p_u * q_i
         """
-        with tf.compat.v1.variable_scope('prediction'):
-            pred = tf.compat.v1.reduce_sum(
-                tf.compat.v1.multiply(p_u, q_i),
+        with tf.variable_scope('prediction'):
+            pred = tf.reduce_sum(
+                tf.multiply(p_u, q_i),
                 axis=1)
 
-            pred = tf.compat.v1.add_n([b_u, b_i, pred])
+            pred = tf.add_n([b_u, b_i, pred])
 
-            pred = tf.compat.v1.add(pred, mu, name='pred')
+            pred = tf.add(pred, mu, name='pred')
 
         return pred
 
@@ -125,8 +125,8 @@ class SVD(BaseModel):
            The formula is here:
             L2 = sum((r - r_hat) ** 2) / 2
         """
-        with tf.compat.v1.variable_scope('loss'):
-            loss = tf.nn.l2_loss(tf.compat.v1.subtract(ratings, pred), name='loss')
+        with tf.variable_scope('loss'):
+            loss = tf.nn.l2_loss(tf.subtract(ratings, pred), name='loss')
 
         return loss
 
@@ -136,15 +136,15 @@ class SVD(BaseModel):
            The objective function is defined as the sum of
             loss and regularizers' losses.
         """
-        with tf.compat.v1.variable_scope('optimizer'):
+        with tf.variable_scope('optimizer'):
             objective = tf.add(
                 loss,
-                tf.compat.v1.add_n(tf.compat.v1.get_collection(
-                    tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)),
+                tf.add_n(tf.compat.v1.get_collection(
+                    tf.GraphKeys.REGULARIZATION_LOSSES)),
                 name='objective')
 
             try:
-                optimizer = tf.compat.v1.contrib.keras.optimizers.Nadam(
+                optimizer = tf.contrib.keras.optimizers.Nadam(
                 ).minimize(objective, name='optimizer')
             except:
                 optimizer = tf.train.AdamOptimizer().minimize(objective, name='optimizer')
@@ -171,7 +171,7 @@ class SVD(BaseModel):
         train_gen = BatchGenerator(x, y, batch_size)
         steps_per_epoch = np.ceil(train_gen.length / batch_size).astype(int)
 
-        self._sess.run(tf.compat.v1.global_variables_initializer())
+        self._sess.run(tf.global_variables_initializer())
 
         for e in range(1, epochs + 1):
             print('Epoch {}/{}'.format(e, epochs))
