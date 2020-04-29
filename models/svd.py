@@ -139,7 +139,7 @@ class SVD(BaseModel):
         with tf.variable_scope('optimizer'):
             objective = tf.add(
                 loss,
-                tf.add_n(tf.compat.v1.get_collection(
+                tf.add_n(tf.get_collection(
                     tf.GraphKeys.REGULARIZATION_LOSSES)),
                 name='objective')
 
